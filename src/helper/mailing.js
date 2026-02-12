@@ -33,6 +33,7 @@ const sendMailForOTP = async (to, subject, text, html = "") => {
     const info = await transporter.sendMail(mailOptions);
     return info; // Return the result of the send operation
   } catch (error) {
+    console.error("Error sending email to:", to, " with error: ", error);
     throw error;
   }
 };

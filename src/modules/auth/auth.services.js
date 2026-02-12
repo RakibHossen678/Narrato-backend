@@ -64,7 +64,6 @@ const loginWithGoogle = async (data) => {
 
   // If user exists, return existing user and generate a token
   if (user) {
-    console.log("User already exists");
     const token = generateToken(user.userId, user.role);
     return { token, user };
   }
@@ -120,7 +119,6 @@ const generateOtp = () => {
 // Sends an OTP email to the user for password reset.
 const sendOtp = async (email) => {
   const otp = generateOtp();
-  console.log(otp, "Generated OTP");
 
   // OTP expiration time (10 minutes from now)
   const expiresAt = new Date(Date.now() + 10 * 60000);
@@ -137,7 +135,7 @@ const sendOtp = async (email) => {
     `Your OTP is: ${otp}`,
     htmlTemplate(otp),
   );
-  console.log(`OTP sent to: ${email}`);
+
   return otp;
 };
 

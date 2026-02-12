@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema(
     googleId: { type: String, default: null },
     role: { type: String, enum: ["user", "admin"], default: "user" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Auto-generate userId before saving

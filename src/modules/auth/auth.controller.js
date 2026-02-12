@@ -33,8 +33,6 @@ const loginWithGoogleHandler = catchAsync(async (req, res) => {
   });
 });
 
-
-
 // Forgot password handler
 const forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.body;

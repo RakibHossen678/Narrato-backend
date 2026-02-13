@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const customIdGenerator = require("../../utils/customIdGenerator");
 
 const BlogSchema = new mongoose.Schema(
   {
@@ -64,8 +65,25 @@ const BlogSchema = new mongoose.Schema(
         return this.isPaid;
       },
     },
+
+    // Track *who* voted so you can prevent repeat votes and allow undo/switch.
+    // (Stored as userId strings to match the rest of the schema.)
+    votes: {
+      upvoters: {
+        type: [String],
+        default: [],
+      },
+      downvoters: {
+        type: [String],
+        default: [],
+      },
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  },
 );
 
 // Auto-generate blogId before saving
@@ -85,6 +103,30 @@ BlogSchema.pre("save", function (next) {
       .replace(/^-+|-+$/g, ""); // remove leading/trailing hyphens
   }
   next();
+});
+
+BlogSchema.virtual("upvotesCount").get(function () {
+  const upvoters = Array.isArray(this?.votes?.upvoters)
+    ? this.votes.upvoters
+    : [];
+  return upvoters.length;
+});
+
+BlogSchema.virtual("downvotesCount").get(function () {
+  const downvoters = Array.isArray(this?.votes?.downvoters)
+    ? this.votes.downvoters
+    : [];
+  return downvoters.length;
+});
+
+BlogSchema.virtual("score").get(function () {
+  const up = Array.isArray(this?.votes?.upvoters)
+    ? this.votes.upvoters.length
+    : 0;
+  const down = Array.isArray(this?.votes?.downvoters)
+    ? this.votes.downvoters.length
+    : 0;
+  return up - down;
 });
 
 const Blog = mongoose.model("Blog", BlogSchema);

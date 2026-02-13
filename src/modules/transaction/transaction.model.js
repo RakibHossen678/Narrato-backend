@@ -1,5 +1,6 @@
 // transaction.models.js (final)
 const mongoose = require("mongoose");
+const customIdGenerator = require("../../utils/customIdGenerator");
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -21,4 +22,14 @@ const transactionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model("Transaction", transactionSchema);
+// Auto-generate transactionId before saving
+transactionSchema.plugin(customIdGenerator, {
+  field: "transactionId",
+  prefix: "TRX",
+  enableCondition: (transaction) =>
+    !!transaction.amount && !!transaction.userId && !!transaction.blogId,
+});
+
+const Transaction = mongoose.model("Transaction", transactionSchema);
+
+module.exports = Transaction;

@@ -9,7 +9,7 @@ async function main() {
     await mongoose.connect(config.database_url);
     server = app.listen(config.port, () => {
       console.log(
-        `Narrato Backend Template app listening on port ${config.port}`,
+        `Narrato Backend listening on port ${config.port}`,
       );
     });
   } catch (err) {

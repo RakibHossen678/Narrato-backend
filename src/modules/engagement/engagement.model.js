@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const customIdGenerator = require("../../utils/customIdGenerator");
 
 const EngagementSchema = new mongoose.Schema(
   {

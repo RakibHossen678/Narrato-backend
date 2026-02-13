@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const customIdGenerator = require("../../utils/customIdGenerator");
 
 const ReportSchema = new mongoose.Schema(
   {
@@ -8,7 +9,6 @@ const ReportSchema = new mongoose.Schema(
     },
     blogId: {
       type: String,
-      unique: true,
       required: [true, "Blog ID is required"],
       index: true,
     },

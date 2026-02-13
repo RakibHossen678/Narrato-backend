@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const customIdGenerator = require("../../utils/customIdGenerator");
 
 const SubscriberSchema = new mongoose.Schema(
   {

@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, default: null },
     googleId: { type: String, default: null },
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    photoUrl: { type: String, default: null },
   },
   { timestamps: true },
 );

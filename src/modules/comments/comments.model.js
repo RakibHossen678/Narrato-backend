@@ -50,6 +50,8 @@ const CommentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// TODO: User can share a blog post on social media platforms
+
 CommentSchema.plugin(customIdGenerator, {
   field: "commentId",
   prefix: "CMT",

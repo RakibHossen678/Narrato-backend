@@ -49,6 +49,21 @@ const BlogSchema = new mongoose.Schema(
       type: String,
       required: [true, "Slug is required"],
     },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    price: {
+      type: Number,
+      default: 0,
+      required: function () {
+        return this.isPaid;
+      },
+    },
   },
   { timestamps: true },
 );

@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const UserSchema = new mongoose.Schema(
   {
     userId: { type: String, unique: true },
+    userName: { type: String, required: true, unique: true },
     firstName: { type: String },
     lastName: { type: String },
     email: { type: String, required: true, unique: true },
@@ -35,6 +36,14 @@ UserSchema.pre("save", async function (next) {
   } catch (err) {
     next(err);
   }
+});
+
+// generate username from email before saving (if not provided)
+UserSchema.pre("save", function (next) {
+  if (!this.userName && this.email) {
+    this.userName = this.email.split("@")[0];
+  }
+  next();
 });
 
 // ✅ Method to compare passwords (for login)

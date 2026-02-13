@@ -8,7 +8,8 @@ const customIdGenerator = (schema, options) => {
     dynamicPrefix = null,
   } = options;
 
-  schema.pre("save", async function (next) {
+  // Use pre('validate') so IDs are generated before required validators run.
+  schema.pre("validate", async function (next) {
     try {
       // Check if the field (e.g., userId) is not set and the enableCondition returns true
       if (!this[field] && enableCondition(this)) {

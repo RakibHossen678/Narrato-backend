@@ -2,6 +2,189 @@ const { StatusCodes } = require("http-status-codes");
 const AppError = require("../../errors/AppError");
 const Comment = require("./comments.model");
 
+const parsePagination = ({ page = 1, limit = 20 } = {}) => {
+  const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+  const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const skip = (parsedPage - 1) * parsedLimit;
+  return { page: parsedPage, limit: parsedLimit, skip };
+};
+
+const createComment = async ({ userId, blogId, content }) => {
+  if (!userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "Authentication required.");
+  }
+  if (!blogId) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Blog ID is required.",
+      "Provide a valid blogId.",
+    );
+  }
+  if (!content || !String(content).trim()) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Content is required.",
+      "Provide non-empty comment content.",
+    );
+  }
+
+  const comment = await Comment.create({
+    userId,
+    blogId,
+    content: String(content).trim(),
+    parentCommentId: null,
+  });
+
+  return comment;
+};
+
+const replyToComment = async ({ userId, parentCommentId, content }) => {
+  if (!userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "Authentication required.");
+  }
+  if (!parentCommentId) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Parent comment ID is required.",
+      "Provide a valid parent commentId.",
+    );
+  }
+  if (!content || !String(content).trim()) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Content is required.",
+      "Provide non-empty reply content.",
+    );
+  }
+
+  const parent = await Comment.findOne({ commentId: parentCommentId }).select(
+    "commentId blogId rootCommentId",
+  );
+  if (!parent) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Parent comment not found.");
+  }
+
+  const reply = await Comment.create({
+    userId,
+    blogId: parent.blogId,
+    content: String(content).trim(),
+    parentCommentId: parent.commentId,
+    rootCommentId: parent.rootCommentId || parent.commentId,
+  });
+
+  await Comment.updateOne(
+    { commentId: parent.commentId },
+    { $inc: { replyCount: 1 } },
+  );
+
+  return reply;
+};
+
+const listRootCommentsByBlog = async ({ blogId, page, limit }) => {
+  if (!blogId) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Blog ID is required.",
+      "Provide a valid blogId.",
+    );
+  }
+
+  const {
+    skip,
+    limit: take,
+    page: currentPage,
+  } = parsePagination({
+    page,
+    limit,
+  });
+
+  const filter = { blogId, parentCommentId: null };
+  const [items, total] = await Promise.all([
+    Comment.find(filter).sort({ createdAt: -1 }).skip(skip).limit(take),
+    Comment.countDocuments(filter),
+  ]);
+
+  return {
+    meta: {
+      page: currentPage,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take) || 1,
+    },
+    items,
+  };
+};
+
+const listReplies = async ({ parentCommentId, page, limit }) => {
+  if (!parentCommentId) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Parent comment ID is required.",
+      "Provide a valid parent commentId.",
+    );
+  }
+
+  const {
+    skip,
+    limit: take,
+    page: currentPage,
+  } = parsePagination({
+    page,
+    limit,
+  });
+
+  const filter = { parentCommentId };
+  const [items, total] = await Promise.all([
+    Comment.find(filter).sort({ createdAt: 1 }).skip(skip).limit(take),
+    Comment.countDocuments(filter),
+  ]);
+
+  return {
+    meta: {
+      page: currentPage,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take) || 1,
+    },
+    items,
+  };
+};
+
+const listThread = async ({ rootCommentId, page, limit }) => {
+  if (!rootCommentId) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Root comment ID is required.",
+      "Provide a valid rootCommentId.",
+    );
+  }
+
+  const {
+    skip,
+    limit: take,
+    page: currentPage,
+  } = parsePagination({
+    page,
+    limit,
+  });
+
+  const filter = { rootCommentId };
+  const [items, total] = await Promise.all([
+    Comment.find(filter).sort({ createdAt: 1 }).skip(skip).limit(take),
+    Comment.countDocuments(filter),
+  ]);
+
+  return {
+    meta: {
+      page: currentPage,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take) || 1,
+    },
+    items,
+  };
+};
+
 const normalizeVoteValue = (rawVote) => {
   const vote = String(rawVote || "")
     .trim()
@@ -114,5 +297,10 @@ const voteOnComment = async ({ commentId, userId, vote: rawVote }) => {
 };
 
 module.exports = {
+  createComment,
+  replyToComment,
+  listRootCommentsByBlog,
+  listReplies,
+  listThread,
   voteOnComment,
 };

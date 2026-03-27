@@ -5,6 +5,8 @@ const authRoutes = require("../modules/auth/auth.routes");
 const userRoutes = require("../modules/user/user.routes");
 const commentsRoutes = require("../modules/comments/comments.routes");
 const blogsRoutes = require("../modules/blogs/blogs.routes");
+const subscriberRoutes = require("../modules/subscriber/subscriber.routes");
+const notificationsRoutes = require("../modules/notifications/notifications.routes");
 
 const moduleRoutes = [
   {
@@ -22,6 +24,14 @@ const moduleRoutes = [
   {
     path: "/blogs",
     route: blogsRoutes,
+  },
+  {
+    path: "/subscriptions",
+    route: subscriberRoutes,
+  },
+  {
+    path: "/notifications",
+    route: notificationsRoutes,
   },
 ];
 

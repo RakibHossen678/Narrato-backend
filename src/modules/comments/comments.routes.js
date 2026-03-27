@@ -31,7 +31,7 @@ router.get("/threads/:rootCommentId", commentsController.listThreadHandler);
 // PATCH /api/v1/comments/:commentId/vote
 // body: { "vote": "up" | "down" }
 router.patch(
-  "/:commentId/vote",
+  "/:commentId/vote", 
   authMiddleware(),
   commentsController.voteOnCommentHandler,
 );

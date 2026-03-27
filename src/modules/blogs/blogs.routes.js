@@ -1,17 +1,45 @@
 const express = require("express");
+const multer = require("multer");
 
 const authMiddleware = require("../../middlewares/authMiddleware");
 const blogsController = require("./blogs.controller");
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Routes
-// router.post("/save-blog", saveBlogHandler);
-// router.get("/get-all-blogs", getAllBlogsHandler);
-// router.get("/get-single-blog/:blogId", getSingleBlogHandler);
-// router.get("/get-single-blog-by-title/:slug", getSingleBlogHandlerBySlug);
-// router.put("/update-blog/:blogId", updateBlogHandler);
-// router.delete("/delete-blog/:blogId", deleteBlogHandler);
+// Blog CRUD + feed routes
+router.post(
+  "/",
+  authMiddleware("user", "admin"),
+  blogsController.createBlogHandler,
+);
+router.get("/", blogsController.getAllBlogsHandler);
+router.get("/:blogId", blogsController.getSingleBlogHandler);
+router.get("/slug/:slug", blogsController.getSingleBlogHandlerBySlug);
+router.put(
+  "/:blogId",
+  authMiddleware("user", "admin"),
+  blogsController.updateBlogHandler,
+);
+router.delete(
+  "/:blogId",
+  authMiddleware("user", "admin"),
+  blogsController.deleteBlogHandler,
+);
+
+// Interaction routes
+router.patch(
+  "/:blogId/bookmark",
+  authMiddleware("user", "admin"),
+  blogsController.toggleBookmarkHandler,
+);
+router.post("/:blogId/share", blogsController.incrementShareHandler);
+router.post(
+  "/upload-image",
+  authMiddleware("user", "admin"),
+  upload.single("image"),
+  blogsController.uploadBlogImageHandler,
+);
 
 // PATCH /api/v1/blogs/:blogId/vote
 // body: { "vote": "up" | "down" }

@@ -17,6 +17,11 @@ const BlogSchema = new mongoose.Schema(
       type: String,
       required: [true, "Title is required"],
       trim: true,
+      index: true,
+    },
+    excerpt: {
+      type: String,
+      default: "",
     },
     content: {
       type: String,
@@ -28,31 +33,43 @@ const BlogSchema = new mongoose.Schema(
     },
     authorBio: {
       type: String,
-      required: [true, "Author bio is required"],
+      default: "",
     },
     designation: {
       type: String,
-      required: [true, "Designation is required"],
+      default: "",
     },
     image: {
       type: String,
-      required: [true, "Image is required"],
+      default: "",
     },
     facebook: {
       type: String,
-      required: [true, "Facebook is required"],
+      default: "",
     },
     linkedin: {
       type: String,
-      required: [true, "LinkedIn is required"],
+      default: "",
     },
     slug: {
       type: String,
-      required: [true, "Slug is required"],
+      index: true,
+      unique: true,
+    },
+    tags: {
+      type: [String],
+      default: [],
+      index: true,
     },
     isPublished: {
       type: Boolean,
       default: false,
+      index: true,
+    },
+    publishedAt: {
+      type: Date,
+      default: null,
+      index: true,
     },
     isPaid: {
       type: Boolean,
@@ -64,6 +81,30 @@ const BlogSchema = new mongoose.Schema(
       required: function () {
         return this.isPaid;
       },
+    },
+    readTimeMinutes: {
+      type: Number,
+      default: 1,
+    },
+    shareCount: {
+      type: Number,
+      default: 0,
+    },
+    bookmarkCount: {
+      type: Number,
+      default: 0,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
+    },
+    viewCount: {
+      type: Number,
+      default: 0,
+    },
+    bookmarkedBy: {
+      type: [String],
+      default: [],
     },
 
     // Track *who* voted so you can prevent repeat votes and allow undo/switch.
@@ -102,8 +143,37 @@ BlogSchema.pre("save", function (next) {
       .replace(/[^a-z0-9]+/g, "-") // replace non-alphanumeric with hyphen
       .replace(/^-+|-+$/g, ""); // remove leading/trailing hyphens
   }
+
+  if (this.isModified("isPublished") && this.isPublished && !this.publishedAt) {
+    this.publishedAt = new Date();
+  }
+
+  if (this.isModified("content") || this.isNew) {
+    const words = String(this.content || "")
+      .replace(/<[^>]+>/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    this.readTimeMinutes = Math.max(1, Math.ceil(words.length / 220));
+  }
+
+  if (this.isModified("tags") && Array.isArray(this.tags)) {
+    this.tags = this.tags
+      .map((tag) =>
+        String(tag || "")
+          .trim()
+          .toLowerCase(),
+      )
+      .filter(Boolean);
+  }
+
   next();
 });
+
+BlogSchema.index({ isPublished: 1, publishedAt: -1, createdAt: -1 });
+BlogSchema.index({ userId: 1, createdAt: -1 });
+BlogSchema.index({ tags: 1, createdAt: -1 });
+BlogSchema.index({ title: "text", excerpt: "text", content: "text" });
 
 BlogSchema.virtual("upvotesCount").get(function () {
   const upvoters = Array.isArray(this?.votes?.upvoters)

@@ -91,7 +91,7 @@ const getUser = async (user) => {
     );
   }
 
-  const foundUser = await User.findById(user.userId);
+  const foundUser = await User.findOne({ userId: user.userId });
 
   if (!foundUser) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found.");
@@ -146,7 +146,7 @@ const verifyOtp = async (email, otp) => {
   // Check if the OTP is valid and not expired
   if (record && record.expiresAt > new Date()) {
     // Delete the OTP record after it has been successfully used
-    await OtpModel.deleteOne({ userId: record.userId });
+    await OtpModel.deleteOne({ _id: record._id });
     return true;
   }
 
